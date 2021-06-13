@@ -3,15 +3,19 @@ pragma solidity >=0.4.22 <0.9.0;
 
 contract Multisig {
 
-  address[] public owners;
   mapping(address => bool) public isOwner;
-  mapping(address => bool) public voted;
-  uint public approvalCount;
-  uint public approvalLimit;
-  bool public voteInProgress;
+  uint approvalLimit;
 
-  uint amount;
-  address payable recipient;
+  struct TransferRequest {
+    uint amount;
+    address payable recipient;
+    uint approvalCount;
+    uint id;
+    bool completed;
+  }
+
+  TransferRequest[] public transferRequests;
+  mapping(address => mapping(uint => bool)) public voted;
 
   modifier ownersOnly {
     require(isOwner[msg.sender] == true, "Not accessible to unauthorized owners");
@@ -19,16 +23,10 @@ contract Multisig {
   }
 
   constructor(address _owner1, address _owner2, address _owner3, uint _limit) public {
-    owners.push(_owner1);
-    owners.push(_owner2);
-    owners.push(_owner3);
     isOwner[_owner1] = true;
     isOwner[_owner2] = true;
     isOwner[_owner3] = true;
-
     approvalLimit = _limit;
-    approvalCount = 0;
-    voteInProgress = false;
   }
 
   // accept public deposits
@@ -37,36 +35,23 @@ contract Multisig {
   }
 
   function transferRequest(uint _amount, address payable _recipient) public ownersOnly {
-    require(address(this).balance >= _amount, "Amount exceeds contract's balance");
-    require(voteInProgress == false, "there is pending proposal");
-
-    amount = _amount;
-    recipient = _recipient;
-    voteInProgress = true;
-
-    _approve();
+    require(address(this).balance >= _amount, "Requested Amount exceeds available balance");
+    transferRequests.push(TransferRequest(_amount, _recipient, approvalLimit, transferRequests.length, false));
+    approveRequest(transferRequests.length);
   }
 
-  function _approve() private {
-    require(voted[msg.sender] == false, "owner already voted");
-    voted[msg.sender] = true;
-    approvalCount ++;
+  function approveRequest(uint _id) public {
+    require(voted[msg.sender][_id] == false, "user already voted on this proposal");
+    voted[msg.sender][_id] = true;
+    transferRequests[_id].approvalCount ++;
 
-    if(approvalCount >= approvalLimit) {
-      // reset everything
-      approvalCount = 0;
-      voteInProgress = false;
-      for(uint i = 0; i <= owners.length; i++){
-        voted[owners[i]] = false;
-      }
+    uint _approvals = transferRequests[_id].approvalCount;
 
-      // approve withdraw
+    if(_approvals >= approvalLimit) {
       uint _prevBalance = address(this).balance;
-      recipient.transfer(amount);
-      assert(address(this).balance == _prevBalance - amount);
-      // reset recipient and amount
-      amount = 0;
-      recipient = address(0);
+      transferRequests[_id].recipient.transfer(transferRequests[_id].amount);
+      assert(address(this).balance == _prevBalance - transferRequests[_id].amount);
+      transferRequests[_id].completed = true;
+      }
     }
-  }
 }
