@@ -38,8 +38,12 @@ contract Multisig is Team {
     transferRequests[_id].approvalCount ++;
     uint _approvals = transferRequests[_id].approvalCount;
     if(_approvals >= approvalLimit) {
-      transferRequests[_id].recipient.transfer(transferRequests[_id].amount);
+      payTeam();
       transferRequests[_id].completed = true;
     }
+  }
+
+  function payTeam() private {
+    //
   }
 }
