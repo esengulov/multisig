@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.9.0;
+pragma solidity >=0.8.0 <0.9.0;
 
 import "./Team.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Multisig is Team {
+contract Treasury is Team {
+  using SafeMath for uint;
 
   uint approvalLimit;
 
@@ -38,12 +40,18 @@ contract Multisig is Team {
     transferRequests[_id].approvalCount ++;
     uint _approvals = transferRequests[_id].approvalCount;
     if(_approvals >= approvalLimit) {
-      payTeam();
+      payTeam(transferRequests[_id].amount);
       transferRequests[_id].completed = true;
     }
   }
 
-  function payTeam() private {
-    //
+  function payTeam(uint256 _amount) private {
+    uint newPayment = SafeMath.div(_amount, memberCount);
+    for(uint i = 0; i < members.length; i++) {
+      if(isActiveMember[members[i].wallet] == true) {
+        members[i].allowance = SafeMath.add(members[i].allowance, newPayment);
+      }
+    }
   }
+
 }
