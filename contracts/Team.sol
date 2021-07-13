@@ -11,7 +11,7 @@ contract Team {
 
   Member[] members;
   mapping(address => bool) isActiveMember;
-  uint256 memberCount;
+  uint256 public memberCount;
 
   address admin;
 
@@ -26,6 +26,7 @@ contract Team {
   }
 
   constructor(address[] memory _members) public {
+    memberCount = 0;
     for(uint i = 0; i < _members.length; i++) {
       address wallet = _members[i];
       members.push(Member(i, _members[i], 0));
@@ -44,4 +45,5 @@ contract Team {
     isActiveMember[_old] = false;
     memberCount --;
   }
+
 }
