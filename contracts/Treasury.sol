@@ -17,7 +17,7 @@ contract Treasury is Team {
     bool completed;
   }
 
-  TransferRequest[] transferRequests;
+  TransferRequest[] public transferRequests;
   mapping(address => mapping(uint => bool)) voted;
 
   constructor(uint _limit, address[] memory members) Team(members) public {
@@ -52,6 +52,10 @@ contract Treasury is Team {
         members[i].allowance = SafeMath.add(members[i].allowance, newPayment);
       }
     }
+  }
+
+  function requestCount() public view virtual returns(uint) {
+    return transferRequests.length;
   }
 
 }

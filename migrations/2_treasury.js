@@ -1,6 +1,10 @@
 const treasury = artifacts.require("Treasury");
-const teamMembers = ['0x1d5cb132066128a134bb544330a64cdab914ee27', '0xaf3f381a92662b7df10d8fce2346dbad8db4a0de', '0xd6e85ac83481666e9ab561957f99722658cdd0d1'];
 const multisigCount = 2;
+
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
+const teamMembers = [accounts[0], accounts[1], accounts[2]];
+console.log(accounts);
+
 
 module.exports = function(deployer) {
   deployer.deploy(treasury, multisigCount, teamMembers);

@@ -9,7 +9,7 @@ contract Team {
     uint256 allowance;
   }
 
-  Member[] members;
+  Member[] public members;
   mapping(address => bool) isActiveMember;
   uint256 public memberCount;
 
@@ -30,6 +30,7 @@ contract Team {
     for(uint i = 0; i < _members.length; i++) {
       address wallet = _members[i];
       members.push(Member(i, _members[i], 0));
+      isActiveMember[_members[i]] = true;
       memberCount ++;
     }
     admin = msg.sender;
